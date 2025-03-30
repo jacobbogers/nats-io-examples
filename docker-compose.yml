@@ -1,0 +1,60 @@
+services:
+  nats-0:
+    image: nats:latest
+    container_name: nats-0
+    command: [
+      "--name", "nats-0",
+      "--cluster_name", "nats-cluster",
+      "--cluster", "nats://0.0.0.0:6222",
+      "-m", "8222"
+    ]
+    ports:
+      - "4222:4222"  # Client connections
+      - "6222:6222"  # Cluster communication
+      - "8222:8222"  # Monitoring UI
+    volumes:
+      - ./nats-0-data:/data  # Store JetStream data on the host  
+    networks:
+      - nats-net
+
+  nats-1:
+    image: nats:latest
+    container_name: nats-1
+    command: [
+      "--name", "nats-1",
+      "--cluster_name", "nats-cluster",
+      "--cluster", "nats://0.0.0.0:6222",
+      "--routes", "nats://nats-0:6222",
+       "-m", "8222"
+    ]
+    ports:
+      - "4223:4222"
+      - "6223:6222"
+      - "8223:8222"
+    volumes:
+      - ./nats-1-data:/data  # Store JetStream data on the host  
+    networks:
+      - nats-net
+
+  nats-2:
+    image: nats:latest
+    container_name: nats-2
+    command: [
+      "--name", "nats-2",
+      "--cluster_name", "nats-cluster",
+      "--cluster", "nats://0.0.0.0:6222",
+      "--routes", "nats://nats-0:6222",
+       "-m", "8222"
+    ]
+    ports:
+      - "4224:4222"
+      - "6224:6222"
+      - "8224:8222"
+    volumes:
+      - ./nats-2-data:/data  # Store JetStream data on the host    
+    networks:
+      - nats-net
+
+networks:
+  nats-net:
+    driver: bridge
