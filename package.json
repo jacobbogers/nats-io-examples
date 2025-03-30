@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@nats-io/jetstream": "^3.0.0",
     "@nats-io/transport-node": "^3.0.0"
   },
   "type": "module",
