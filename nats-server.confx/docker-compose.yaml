@@ -1,0 +1,62 @@
+version: "3"
+services:
+  cli.nats.internal:
+    image: synadia/nats-server:nightly
+    dns_search: nats.internal
+    entrypoint: /bin/sh
+    networks:
+      - shared
+    volumes:
+      - "./cli:/root/.config/nats"
+  n1.c1.nats.internal:
+    dns_search: c1.nats.internal
+    image: nats:latest
+    environment:
+      GATEWAY: c1
+      NAME: n1.c1
+      ADVERTISE: n1.c1.nats.internal:10000
+    networks:
+      - shared
+      - nats-cluster1
+    ports:
+      - 10000:4222
+    volumes:
+      - ./cluster.conf:/nats-server.conf
+      - ./data/n1.c1:/data
+  
+  n2.c1.nats.internal:
+    dns_search: c1.nats.internal
+    image: nats:latest
+    environment:
+      GATEWAY: c1
+      NAME: n2.c1
+      ADVERTISE: n2.c1.nats.internal:10001
+    networks:
+      - shared
+      - nats-cluster1
+    ports:
+      - 10001:4222
+    volumes:
+      - ./cluster.conf:/nats-server.conf
+      - ./data/n2.c1:/data
+  
+  n3.c1.nats.internal:
+    dns_search: c1.nats.internal
+    image: nats:latest
+    environment:
+      GATEWAY: c1
+      NAME: n3.c1
+      ADVERTISE: n3.c1.nats.internal:10002
+    networks:
+      - shared
+      - nats-cluster1
+    ports:
+      - 10002:4222
+    volumes:
+      - ./cluster.conf:/nats-server.conf
+      - ./data/n3.c1:/data
+  
+
+networks:
+  nats-cluster1: {}
+  shared: {}

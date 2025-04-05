@@ -1,0 +1,7 @@
+{
+  "description":"NATS User Account",
+  "url":"nats://n1.c1.nats.internal:4222,nats://n2.c1.nats.internal:4222,nats://n3.c1.nats.internal:4222",
+  "user":"user",
+  "password":"s3cret",
+  "color_scheme":"green"
+}
