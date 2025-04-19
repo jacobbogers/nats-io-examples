@@ -1,8 +1,8 @@
 This is the jwt of the "SYSTEM" (system) account, 
 
-"issued" by the "operator" entity, the name of the operator = "operator02" you can find this with the command `nsc list keys` 
+"issued" by the "operator" entity, the name of the operator = "operator02" you can find this with the command `nsc list keys`
 
-(this is neither an account or user) 
+(this is neither an account or user)
 
 the "sub" is the "nkey" of the admin account
 

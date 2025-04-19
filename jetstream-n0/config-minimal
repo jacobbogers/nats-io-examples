@@ -1,0 +1,8 @@
+server_name: n0
+
+# The address and port clients must connect to
+listen: 0.0.0.0:4222
+
+# HTTP requests can be made to this port for monitoring purpose
+monitor_port: 8222
+
