@@ -55,8 +55,8 @@ function returnCreds(jwt, seed) {
             "wildcards": true,
             "conn": -1,
             "leaf": -1,
-            "mem_storage": -1,
-            "disk_storage": -1
+          //  "mem_storage": -1,
+          //  "disk_storage": -1
         }
     }
     const accJwt = await encodeAccount('my-account', account, nats, { signer: operator } );

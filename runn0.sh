@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# SUBST N $($realpath.exe ./jetstream-n0/)
+# SUBST N: $(realpath.exe ./jetstream-n0/)
 
-nats-server.exe -c /n/config-minimal 
+nats-server.exe -c /n/config-with-operator-and-systaccount
