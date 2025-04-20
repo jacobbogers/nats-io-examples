@@ -1,5 +1,4 @@
 /*
-npx tsx src/one-shot-create-operator.ts 
 skOperator[0].seed: SOAEPJ5WJHD3F3RASWZZSGXQXLEZWSFGFAOBT6FP67ARJBPMJ3DCMLTBXI
 skOperator[1].seed: SOANDWPKXHNEN7B7EMAXZJOPE5HWVRSPSRHDVJBLHGDACE5V4JU2GHJVJE
 skOperator[2].seed: SOAF7OVO5ZVJOU6HCWK5SPT3TIJ6REXRJISG5VAL2VXPG2Z62GFWOCLSTY
@@ -53,7 +52,7 @@ const jwt = await encodeAccount('system_account', sysAccountKP, {
         //  "mem_storage": -1, 
         //  "disk_storage": -1
     }
-}, { signer: operatorKP });
+}, { signer: operatorKP.getSeed(), aud: '2NATS' });
 
 console.log('system jwt', jwt);
 
