@@ -12,22 +12,28 @@ operator jwt: eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJhdWQiOiJOQVRTIiw
 */
 import { fromSeed, createUser } from "@nats-io/nkeys";
 import { encodeUser } from "@nats-io/jwt";
+import { writeFileSync } from 'node:fs';
 
 import { connect, ConnectionOptions, credsAuthenticator, StringCodec, type NatsConnection } from 'nats';
 
+// NOTE: FORMATTING IS IMPORTANT (no indent) FOR "nats" CLI TOOL
 function returnCreds(jwt: string, seed: string) {
   return `-----BEGIN NATS USER JWT-----
-    ${jwt}
-  ------END NATS USER JWT------
+${jwt}
+------END NATS USER JWT------
 
 ************************* IMPORTANT *************************
-  NKEY Seed printed below can be used sign and prove identity.
-  NKEYs are sensitive and should be treated as secrets.
+NKEY Seed printed below can be used sign and prove identity.
+NKEYs are sensitive and should be treated as secrets.
 
-  -----BEGIN USER NKEY SEED-----
-    ${seed}
-  ------END USER NKEY SEED------
+-----BEGIN USER NKEY SEED-----
+${seed}
+------END USER NKEY SEED------
 `;
+}
+
+function delay(ts: number) {
+  return new Promise<void>(resolve => setTimeout(() => resolve(undefined), ts));
 }
 
 async function runme() {
@@ -62,10 +68,13 @@ async function runme() {
   console.log('account nkey', systemAccountKP.getPublicKey());
 
   const sysUserCreds = returnCreds(userJwt, userSeed);
+  writeFileSync('./sys-user.creds', sysUserCreds);
   const connectOptions: ConnectionOptions = {
     servers: 'localhost:4222',
     authenticator: credsAuthenticator(encode(sysUserCreds)),
-    name: 'temp-system-user'
+    name: 'temp-system-user',
+    reconnect: true,
+    reconnectJitter: 0.5e3
   };
   let nc: NatsConnection;
   try {
@@ -80,14 +89,28 @@ async function runme() {
   }
   const sc = StringCodec();
 
+  nc.closed().then(() => {
+    console.log('the connection is closed');
+  });
+
+
   // Publish the new account to the $SYS.REQ.CLAIMS.UPDATE subject to save it to the /local/jwt folder
   try {
     const m = await nc.request('$SYS.REQ.USER.INFO');
     console.log(`user.info ->: ${sc.decode(m.data)}`);
     const m2 = await nc.request('$SYS.REQ.SERVER.PING.IDZ');
-    console.log(`sever ping ->: ${sc.decode(m2.data)}`);
+    const json = JSON.parse(sc.decode(m2.data));
+    console.log(`sever ping -> %o:`, json);
     const m3 = await nc.request('$SYS.REQ.SERVER.PING');
     console.log(`sever ping+healthcheck ->: ${sc.decode(m3.data)}`);
+    //
+    // dont wait for this connection since it will be close
+    //    maybe assign reconnect prop (no that did not work)
+    // const subj = `$SYS.REQ.SERVER.${json.id}.RELOAD`;
+    // const m4 = await nc.request(subj);
+    // await delay(2000);
+    // await nc.reconnect()
+    // console.log(`config hot reload ->: ${sc.decode(m4.data)}`);
 
 
   } catch (err) {
