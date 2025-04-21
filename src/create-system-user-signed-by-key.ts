@@ -11,7 +11,7 @@ sysAccountKP.seed: 3 SAAF7LLK6TIGQ24YCLL5NUTJVVOL2ODBUX4R42CCQKXVLFWZMWMBZUJ5HM
 operator jwt: eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJhdWQiOiJOQVRTIiwibmFtZSI6Im9wZXJhdG9yLTAzIiwic3ViIjoiT0FCTVZPQzZOQVVWVE9YSDM2SE9PNjJVSFczRllNRTM1VlUzQ1lVUzM3M1pSTERIVjRFRUpRMzMiLCJuYXRzIjp7InNpZ25pbmdfa2V5cyI6WyJPQUs1SlQyRUtUQkdQV0NKUkc0NUdFRUJCVkw0RExQU1BWVUlNNFhYSEMzVzVIRFJYSkZRUFNNTyIsIk9DVlpHUlJaV1hJWjY0TFUzNlBVSlQyVjRKQkFaVFJVMkRFVERSSzZTR1dDV0VRQlQ1QldHVVdNIiwiT0E3Q1lHRVlUNVlRM0NMUDQ3S1lMMkI0VENDQzdRVENDU05aRFJaR0YyVlkyWUhYNkdOWkZLNVIiXSwic3lzdGVtX2FjY291bnQiOiJBRDNST0xWNFEzWUhVWUJTT05XWTZMVkw1NEtDNkdWNU1VUTJaWUM2VkdGVzZKRzRNQVczSTZKSSIsInR5cGUiOiJvcGVyYXRvciIsInZlcnNpb24iOjJ9LCJpc3MiOiJPQUJNVk9DNk5BVVZUT1hIMzZIT082MlVIVzNGWU1FMzVWVTNDWVVTMzczWlJMREhWNEVFSlEzMyIsImlhdCI6MTc0NTA5NDQ1MywianRpIjoiL2JXRzFYczJSQmxzMWxUNjdNTzdFcmI3anhnN0lUZ0hHeUlEaHRkMnR3KzF4T1lnV1JNYkdkVnRyOTdib1c3V1pPUjY0TEY3VjZKTFF6VTRLcHdmaXc9PSJ9.39-Z3F2OyHJM3K0vlMxlQPx4Ve3VI5kGAyP-lbk6xlYft1ARESfR4iiXSnv-95Qu6CdWGwyGq039oNLMN27rDg
 */
 import { fromSeed, createUser } from "@nats-io/nkeys";
-import { encodeUser } from "@nats-io/jwt";
+import { encodeUser, User } from "@nats-io/jwt";
 import { writeFileSync } from 'node:fs';
 
 import { connect, ConnectionOptions, credsAuthenticator, StringCodec, type NatsConnection } from 'nats';
@@ -32,9 +32,9 @@ ${seed}
 `;
 }
 
-function delay(ts: number) {
-  return new Promise<void>(resolve => setTimeout(() => resolve(undefined), ts));
-}
+// function delay(ts: number) {
+//   return new Promise<void>(resolve => setTimeout(() => resolve(undefined), ts));
+// }
 
 async function runme() {
   const endoderInstance = new TextEncoder();
@@ -51,7 +51,7 @@ async function runme() {
   //      no need to store them in the server config file
   const userPK = createUser();
   // Lets generate a JWT for the User and sign it with the Account
-  const config = {
+  const config: Partial<User> = {
     "pub": {},
     "sub": {},
     "subs": -1,

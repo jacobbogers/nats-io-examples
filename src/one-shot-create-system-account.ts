@@ -52,7 +52,7 @@ const jwt = await encodeAccount('system_account', sysAccountKP, {
         //  "mem_storage": -1, 
         //  "disk_storage": -1
     }
-}, { signer: operatorKP.getSeed(), aud: '2NATS' });
+}, { signer: operatorKP.getSeed() });
 
 console.log('system jwt', jwt);
 
