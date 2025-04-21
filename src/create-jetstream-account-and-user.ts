@@ -36,7 +36,7 @@ async function runme() {
     const decoderInstance = new TextDecoder();
     const decode: (Uint8Array) => string = decoderInstance.decode.bind(decoderInstance);
 
-    // to sign the creation of a system user
+
     const operatorKP = fromSeed(encode('SOAHGERKP26RQMZ7OO7VZDAMBECBRLLZGORGJPGMD7RGCUYVNFEJZQ22SQ'));
     const operatorSK = fromSeed(encode('SOAEPJ5WJHD3F3RASWZZSGXQXLEZWSFGFAOBT6FP67ARJBPMJ3DCMLTBXI'));
     const jetStreamAccountKP = createAccount();
@@ -77,8 +77,8 @@ async function runme() {
 
     const userJwt = await encodeUser('casual-user', userPK, jetStreamAccountKP, config);
 
-    console.log('user nkey', userPK.getPublicKey);
-    console.log('account nkey', jetStreamAccountKP.getPublicKey());
+    console.log('user seed', userPK.getPublicKey);
+    console.log('account seed', decode(jetStreamAccountKP.getSeed()));
 
     const connectOptions: ConnectionOptions = {
         servers: 'localhost:4222',
@@ -111,79 +111,6 @@ async function runme() {
         console.log('connect failed, reason: %s', e)
         return;
     }
-
-
-    /*
-        // Lets generate a JWT for the User and sign it with the Account
-        const userPK = createUser();
-        const config = {
-            "pub": {},
-            "sub": {},
-            "subs": -1,
-            "data": -1,
-            "payload": -1,
-            "issuer_account": systemAccountKP.getPublicKey()
-        }
-        const userJwt = await encodeUser('system-user', userPK, systemAccountSK, config)
-        const userPrivKeyString = decode(userPK.getPrivateKey());
-        const userPubKey = userPK.getPublicKey();
-        const userSeed = decode(userPK.getSeed());
-    
-        console.log('user nkey', userPubKey);
-        console.log('account nkey', systemAccountKP.getPublicKey());
-    
-        const sysUserCreds = returnCreds(userJwt, userSeed);
-        writeFileSync('./sys-user.creds', sysUserCreds);
-        const connectOptions: ConnectionOptions = {
-            servers: 'localhost:4222',
-            authenticator: credsAuthenticator(encode(sysUserCreds)),
-            name: 'temp-system-user',
-            reconnect: true,
-            reconnectJitter: 0.5e3
-        };
-        let nc: NatsConnection;
-        try {
-            nc = await connect(connectOptions);
-            console.log('connection success');
-            console.log('servers:', nc.getServer(), nc.stats());
-    
-        }
-        catch (e) {
-            console.log('connect failed, reason: %s', e)
-            return;
-        }
-        const sc = StringCodec();
-    
-        nc.closed().then(() => {
-            console.log('the connection is closed');
-        });
-    
-    
-        // Publish the new account to the $SYS.REQ.CLAIMS.UPDATE subject to save it to the /local/jwt folder
-        try {
-            const m = await nc.request('$SYS.REQ.USER.INFO');
-            console.log(`user.info ->: ${sc.decode(m.data)}`);
-            const m2 = await nc.request('$SYS.REQ.SERVER.PING.IDZ');
-            const json = JSON.parse(sc.decode(m2.data));
-            console.log(`sever ping -> %o:`, json);
-            const m3 = await nc.request('$SYS.REQ.SERVER.PING');
-            console.log(`sever ping+healthcheck ->: ${sc.decode(m3.data)}`);
-            //
-            // dont wait for this connection since it will be close
-            //    maybe assign reconnect prop (no that did not work)
-            // const subj = `$SYS.REQ.SERVER.${json.id}.RELOAD`;
-            // const m4 = await nc.request(subj);
-            // await delay(2000);
-            // await nc.reconnect()
-            // console.log(`config hot reload ->: ${sc.decode(m4.data)}`);
-    
-    
-        } catch (err) {
-            console.log(`problem with request: ${err.message}`);
-            console.info(err);
-        }
-        await nc.close();
-        */
 }
 
 runme();

@@ -18,7 +18,7 @@ resolver_preload {
 
 resolver {
    type: full
-   dir: n:/lib/nats/resolver
+   dir: c:/repos/nats-io-examples/jetstream-n0/lib/nats/resolver
    allow_delete: true
    interval: "2m"
    limit: 1000
@@ -26,7 +26,7 @@ resolver {
 
 jetstream {
     # it will create a subdir "jetstream" under lib/nats
-    store_dir: n:/lib/nats
+    store_dir: c:/repos/nats-io-examples/jetstream-n0
     max_mem: -1
     max_file: -1
 }

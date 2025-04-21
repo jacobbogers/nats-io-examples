@@ -13,13 +13,16 @@
   "dependencies": {
     "@nats-io/jetstream": "^3.0.2",
     "@nats-io/jwt": "^0.0.10-5",
+    "@nats-io/kv": "^3.0.2",
     "@nats-io/nats-core": "^3.0.2",
     "@nats-io/nkeys": "^2.0.3",
     "@nats-io/transport-node": "^3.0.2",
+    "ms": "^2.1.3",
     "nats": "^2.29.3"
   },
   "type": "module",
   "devDependencies": {
+    "@types/ms": "^2.1.0",
     "@types/node": "^22.13.14",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3"

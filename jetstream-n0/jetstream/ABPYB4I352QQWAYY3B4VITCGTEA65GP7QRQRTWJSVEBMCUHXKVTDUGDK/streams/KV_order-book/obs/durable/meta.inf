@@ -1,0 +1,1 @@
+{"Created":"2025-04-21T19:58:29.2842608Z","Name":"durable","durable_name":"durable","name":"durable","deliver_policy":"all","ack_policy":"explicit","ack_wait":30000000000,"max_deliver":-1,"replay_policy":"instant","max_waiting":512,"max_ack_pending":1000,"inactive_threshold":120000000000,"num_replicas":0,"metadata":{"_nats.req.level":"0"}}
