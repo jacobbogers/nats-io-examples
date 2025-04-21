@@ -30,24 +30,27 @@ for await (const info of streamInfo) {
     console.log('deleteResponse response: %o', deleteResponse);
 }
 const testStream = await jsm.streams.add({ name: 'KV_order-book', storage: 'file', num_replicas: 1, subjects: ['nasdaq.>', '$KV.order-book.>'] });
-console.log('client acquired');
+console.log('stream added', testStream.config);
 const client = jsm.jetstream();
 console.log('client acquired');
 
-await client.publish('nasdaq.klm.7794', encode('hello world'), { msgID: '14568' })
+await client.publish('$KV.order-book.nasdaq.klm.7794', encode('first message'), { msgID: '14568' })
 
 const kvm = new Kvm(client);
 const kv = await kvm.create('order-book', { streamName: 'KV_order-book' });
 console.log('orderbook kv created');
 
-const num1 = await kv.put('nasdaq.klm.7794', 'hello');
-console.log('kv post:', num1);
+// const num1 = await kv.put('nasdaq.klm.7794', 'hello');
+// console.log('kv post:', num1);
 
-const received = await kv.get('nasdaq.klm.7794')
-console.log('kv get', received?.string());
+const received = (await kv.get('nasdaq.klm.7794'))!
+console.log('kv get 7794', received.string(), received.operation);
 
+console.log('pubstream', await client.publish('$KV.order-book.nasdaq.klm.7794', encode('hello 3')));
 // const data = new Uint8Array(2048).map(() => Math.random() * 256 - 128);
 
+const received2 = await kv.get('nasdaq.klm.7794')
+console.log('kv get 7794', received2?.string());
 // const t0 = new Date();
 // console.log('benchmark start')
 // const nrMessages = 1e2;
@@ -87,14 +90,17 @@ const ci = await jsm.consumers.add('KV_order-book', {
     inactive_threshold: 2 * 60 * 1E9,
     durable_name: 'durable',
     // idle_heartbeat: 1000 * 1E9, (only for pushed based consumer)
-    ack_policy: AckPolicy.Explicit,
+    // ack_policy: AckPolicy.None,
+
+    opt_start_seq: 2,
+    deliver_policy: "by_start_sequence"
 });
 
 console.log('ci', ci);
 
 const c = await client.consumers.get('KV_order-book', ci.name);
 
-console.log('consumer created', await c.info(false));
+console.log('consumer created', await c.info(true));
 console.log('is pull consumer', c.isPullConsumer());
 console.log('is push consumer', c.isPushConsumer());
 
@@ -104,9 +110,10 @@ while (true) {
         for await (const m of messages) {
             console.log(m.subject);
             console.log(decode(m.data));
+            //console.log(m.info);
             console.log(m.seq);
             console.log(m.sid);
-            m.ack();
+            // m.ackAck();
         }
     } catch (err) {
         console.log(`consume failed: ${err.message}`);
