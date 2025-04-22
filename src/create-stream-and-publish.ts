@@ -1,7 +1,5 @@
-import { fromSeed, createUser, createAccount } from "@nats-io/nkeys";
-import { encodeUser, encodeAccount, User } from "@nats-io/jwt";
-import { writeFileSync, readFileSync } from 'node:fs';
-import ms from 'ms';
+import { readFileSync } from 'node:fs';
+
 
 import { AckPolicy, connect, ConnectionOptions, ConsumerMessages, credsAuthenticator, KvEntry, PubAck, StringCodec } from 'nats';
 import { jetstreamManager, JsMsg } from "@nats-io/jetstream";
@@ -40,17 +38,19 @@ const kvm = new Kvm(client);
 const kv = await kvm.create('order-book', { streamName: 'KV_order-book' });
 console.log('orderbook kv created');
 
-// const num1 = await kv.put('nasdaq.klm.7794', 'hello');
-// console.log('kv post:', num1);
+const num1 = await kv.put('nasdaq.klm.7794', 'hello');
+console.log('kv post:', num1);
 
-const received = (await kv.get('nasdaq.klm.7794'))!
-console.log('kv get 7794', received.string(), received.operation);
+let received = (await kv.get('nasdaq.klm.7794'))!
+console.log('kv get 7794', received.string(), received.operation, received.revision);
 
 console.log('pubstream', await client.publish('$KV.order-book.nasdaq.klm.7794', encode('hello 3')));
 // const data = new Uint8Array(2048).map(() => Math.random() * 256 - 128);
 
-const received2 = await kv.get('nasdaq.klm.7794')
-console.log('kv get 7794', received2?.string());
+console.log('pubstream', await client.publish('$KV.order-book.nasdaq.klm.7794', encode('hello 6')));
+
+received = (await kv.get('nasdaq.klm.7794'))!
+console.log('kv get 7794', received.string(), received.operation, received.revision);
 // const t0 = new Date();
 // console.log('benchmark start')
 // const nrMessages = 1e2;
@@ -82,6 +82,11 @@ for await (const entry of entries) {
     console.log('entry', entry);
 }
 
+const history = await kv.history();
+for await (const hist of history) {
+    console.log('history', decode(hist.value), hist.key);
+}
+
 // console.log('all keys printed');
 console.log('set up consumer');
 
@@ -92,11 +97,10 @@ const ci = await jsm.consumers.add('KV_order-book', {
     // idle_heartbeat: 1000 * 1E9, (only for pushed based consumer)
     // ack_policy: AckPolicy.None,
 
-    opt_start_seq: 2,
+    opt_start_seq: 1,
     deliver_policy: "by_start_sequence"
 });
 
-console.log('ci', ci);
 
 const c = await client.consumers.get('KV_order-book', ci.name);
 
@@ -115,6 +119,7 @@ while (true) {
             console.log(m.sid);
             // m.ackAck();
         }
+        break;
     } catch (err) {
         console.log(`consume failed: ${err.message}`);
     }
