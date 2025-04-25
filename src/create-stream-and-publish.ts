@@ -112,7 +112,7 @@ console.log('is push consumer', c.isPushConsumer());
 while (true) {
     const messages = await c.consume();
     console.log('messages recieved');
-    const iter: AsyncIterator<JsMsg, JsMsg, JsMsg> = messages[Symbol.asyncIterator]() as unknown as AsyncIterator<JsMsg>;
+    const iter: AsyncIterator<JsMsg, JsMsg, JsMsg> = messages[Symbol.asyncIterator]();
     console.log('pending', await messages.getPending());
     const msg1 = await iter.next();
     console.log('msg1', msg1.value.string());
@@ -121,6 +121,10 @@ while (true) {
     const msg2 = await iter.next();
     console.log('msg2', msg2.value.string());
     console.log('pending', await messages.getPending());
+    /**
+     * ask yourself again can pull messages be "acked?" the initiative is from the consumer
+     * ack makes sense if it is push (otherwise redelivery) or move the pull cursor forward
+     */
     // messages.stop();
     // messages.closed()
 
