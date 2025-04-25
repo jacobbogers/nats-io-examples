@@ -1,5 +1,4 @@
-import { createAccount, createOperator, fromSeed } from "@nats-io/nkeys";
-import { encodeAccount, encodeUser, encodeOperator, Operator } from "@nats-io/jwt";
+import { fromSeed } from "@nats-io/nkeys";
 
 const endoderInstance = new TextEncoder();
 const encode = endoderInstance.encode.bind(endoderInstance);

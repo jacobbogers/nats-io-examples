@@ -5,7 +5,7 @@
   "description": "These are standalone snippets of nats.io configurations",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:js": "tsx src/create-stream-and-publish.ts"
   },
   "keywords": [],
   "author": "",

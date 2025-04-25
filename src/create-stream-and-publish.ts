@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 
 
-import { AckPolicy, connect, ConnectionOptions, ConsumerMessages, credsAuthenticator, KvEntry, PubAck, StringCodec } from 'nats';
-import { jetstreamManager, JsMsg } from "@nats-io/jetstream";
-import { type NatsConnection } from "@nats-io/transport-node";
-import { Kvm } from '@nats-io/kv';
+import { jetstreamManager, JsMsg, AckPolicy, ConsumerMessages, PubAck } from "@nats-io/jetstream";
+import { connect, credsAuthenticator, ConnectionOptions } from '@nats-io/transport-node';
+
+import { Kvm, KvEntry } from '@nats-io/kv';
 
 const endoderInstance = new TextEncoder();
 const encode: (string) => Uint8Array = endoderInstance.encode.bind(endoderInstance);
@@ -14,8 +14,10 @@ const decode: (Uint8Array) => string = decoderInstance.decode.bind(decoderInstan
 
 const jsUserCreds = readFileSync('./jetstream-user.creds', { encoding: 'utf-8' })
 
-const nc: NatsConnection = await connect({ servers: "localhost:4222", authenticator: credsAuthenticator(encode(jsUserCreds)) }) as NatsConnection;
+const nc = await connect({ servers: "localhost:4222", authenticator: credsAuthenticator(encode(jsUserCreds)) });
 console.log('jetstream user connected');
+
+nc.closed().then(() => console.log('connection closed'));
 
 const jsm = await jetstreamManager(nc);
 const streamInfo = await jsm.streams.list();
@@ -33,6 +35,7 @@ const client = jsm.jetstream();
 console.log('client acquired');
 
 await client.publish('$KV.order-book.nasdaq.klm.7794', encode('first message'), { msgID: '14568' })
+
 
 const kvm = new Kvm(client);
 const kv = await kvm.create('order-book', { streamName: 'KV_order-book' });
@@ -100,8 +103,6 @@ const ci = await jsm.consumers.add('KV_order-book', {
     opt_start_seq: 1,
     deliver_policy: "by_start_sequence"
 });
-
-
 const c = await client.consumers.get('KV_order-book', ci.name);
 
 console.log('consumer created', await c.info(true));
@@ -110,6 +111,31 @@ console.log('is push consumer', c.isPushConsumer());
 
 while (true) {
     const messages = await c.consume();
+    console.log('messages recieved');
+    const iter: AsyncIterator<JsMsg, JsMsg, JsMsg> = messages[Symbol.asyncIterator]() as unknown as AsyncIterator<JsMsg>;
+    console.log('pending', await messages.getPending());
+    const msg1 = await iter.next();
+    console.log('msg1', msg1.value.string());
+    msg1.value.ack();
+    console.log('pending', await messages.getPending());
+    const msg2 = await iter.next();
+    console.log('msg2', msg2.value.string());
+    console.log('pending', await messages.getPending());
+    // messages.stop();
+    // messages.closed()
+
+    console.log('close messages');
+    await nc.drain();
+    console.log('pending 2', await messages.getPending());
+    // messages.stop();
+    while ((await iter.next()).done !== true) {
+
+    }
+
+    console.log('pending 3', await messages.getPending());
+
+    // 
+    break;
     try {
         for await (const m of messages) {
             console.log(m.subject);
@@ -117,14 +143,14 @@ while (true) {
             //console.log(m.info);
             console.log(m.seq);
             console.log(m.sid);
-            // m.ackAck();
+            m.ackAck();
         }
         break;
     } catch (err) {
         console.log(`consume failed: ${err.message}`);
     }
+
 }
 
 console.log('message consumption done');
 
-await nc.close()
