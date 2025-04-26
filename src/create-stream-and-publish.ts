@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 
-import { jetstreamManager, JsMsg, AckPolicy, ConsumerMessages, PubAck } from "@nats-io/jetstream";
+import { jetstreamManager, JsMsg } from "@nats-io/jetstream";
 import { connect, credsAuthenticator, ConnectionOptions } from '@nats-io/transport-node';
 
 import { Kvm, KvEntry } from '@nats-io/kv';
@@ -13,9 +13,12 @@ const decoderInstance = new TextDecoder();
 const decode: (Uint8Array) => string = decoderInstance.decode.bind(decoderInstance);
 
 const jsUserCreds = readFileSync('./jetstream-user.creds', { encoding: 'utf-8' })
-
-const nc = await connect({ servers: "localhost:4222", authenticator: credsAuthenticator(encode(jsUserCreds)) });
-console.log('jetstream user connected');
+const connectOptions: ConnectionOptions = {
+    servers: "localhost:4222",
+    authenticator: credsAuthenticator(encode(jsUserCreds))
+}
+const nc = await connect(connectOptions);
+console.log('user connected');
 
 nc.closed().then(() => console.log('connection closed'));
 
@@ -48,7 +51,6 @@ let received = (await kv.get('nasdaq.klm.7794'))!
 console.log('kv get 7794', received.string(), received.operation, received.revision);
 
 console.log('pubstream', await client.publish('$KV.order-book.nasdaq.klm.7794', encode('hello 3')));
-// const data = new Uint8Array(2048).map(() => Math.random() * 256 - 128);
 
 console.log('pubstream', await client.publish('$KV.order-book.nasdaq.klm.7794', encode('hello 6')));
 
