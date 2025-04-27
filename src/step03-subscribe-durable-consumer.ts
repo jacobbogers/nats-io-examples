@@ -1,18 +1,21 @@
 import { readFileSync } from 'node:fs';
 
 
-import { jetstreamManager, PubAck } from "@nats-io/jetstream";
-import { connect, credsAuthenticator, ConnectionOptions, headers } from '@nats-io/transport-node';
+import { AckPolicy, jetstreamManager, PubAck } from "@nats-io/jetstream";
+import { connect, credsAuthenticator, ConnectionOptions, nanos } from '@nats-io/transport-node';
+import { DeliverPolicy } from 'nats';
+import { ConsumerApiAction } from 'nats/lib/jetstream/jsapi_types';
 
 const endoderInstance = new TextEncoder();
 const encode: (string) => Uint8Array = endoderInstance.encode.bind(endoderInstance);
 
 const jsUserCreds = readFileSync('./jetstream-user.creds', { encoding: 'utf-8' })
-
+const authenticator = credsAuthenticator(encode(jsUserCreds));
 const options: ConnectionOptions = {
     servers: "localhost:4222",
-    authenticator: credsAuthenticator(encode(jsUserCreds)),
-    name: 'step-02'
+    authenticator,
+    name: 'step-03',
+    timeout: 1e9,
 };
 
 const nc = await connect(options);
@@ -20,8 +23,7 @@ console.log('jetstream user connected');
 
 nc.closed().then(() => console.log('connection closed'));
 
-const jsm = await jetstreamManager(nc);
-const streamInfo = await jsm.streams.list();
+const jsm = await jetstreamManager(nc, { timeout: 1e9 });
 const streamName = 'KV_order-book';
 
 // get the existing stream
@@ -29,30 +31,70 @@ const testStream = await jsm.streams.get(streamName);
 const testStreamInfo = await testStream.info()
 console.log('stream %s found, state:%o, info:%o', streamName, testStreamInfo.state, testStreamInfo.config);
 
-const msgHeaders = headers();
-console.log('headers.code', msgHeaders.code);
-msgHeaders.set('Nats-TTL', `${24 * 3600}`, 'canonical');
-
-if (testStreamInfo.state.messages > 0) {
-    console.log('there area messages in this stream %s will not add more', testStreamInfo.state.messages);
-
-    process.exit(0);
-}
+console.log('messages in stream', testStreamInfo.state.messages);
 
 // publish some messages to the stream
 const jsClient = jsm.jetstream();
-const nrMessages = 1E4; // 10k
 
+// list all consumers
 
+console.log('list consumer');
 
+const cis = await jsm.consumers.list(streamName);
+console.log('list of consumers attached to %s', streamName);
+const consumers = new Set();
+for await (const ci of cis) {
+    consumers.add(ci.name);
+    console.log('consumer name="%s", floor(sequenceinfo)="%o"', ci.name, ci.ack_floor);
+}
+console.log('list of consumers printed');
 
-const ackPromises: Promise<PubAck>[] = [];
-for (let i = 0; i < nrMessages; i++) {
-    const id = Math.random();
-    const promise = jsClient.publish('$KV.order-book.nasdaq.klm.7794', encode(JSON.stringify({ id })), { msgID: 'ref-' + id, headers: msgHeaders });
-    ackPromises.push(promise);
+async function deleteConsumer(name: string): Promise<boolean> {
+    if (consumers.has(name)) {
+        const response = await jsm.consumers.delete(streamName, name);
+        console.log('consumer %s was deleted with response: %s', name, response);
+        return response;
+    }
+    return false;
 }
 
-await Promise.all(ackPromises);
+await deleteConsumer('durable-namex');
+await deleteConsumer('durable-namey');
+await deleteConsumer('durable-namez');
+
+const ci = await jsm.consumers.add('KV_order-book', {
+    name: 'durable-name',
+    // inactive_threshold: nanos(24 * 3600 * 1E3), // 24 hours
+    durable_name: 'durable-name',
+    metadata: {
+        name: 'Jacob',
+        lastName: 'Bogers'
+    },
+    filter_subjects: ['$KV.order-book.nasdaq.>'],
+    deliver_policy: DeliverPolicy.All,
+    ack_policy: AckPolicy.Explicit,
+    // opt_start_seq: 573,
+    // deliver_policy: DeliverPolicy.StartSequence,
+    max_ack_pending: 5,
+    // ack_wait: -1,
+}, ConsumerApiAction.CreateOrUpdate);
+
+console.log('consumer created with:', ci);
+
+const c = await jsClient.consumers.get('KV_order-book', ci.name);
+
+console.log('isPullConsumer', c.isPullConsumer());
+console.log('isPushConsumer', c.isPushConsumer());
+
+const messages = await c.fetch({ max_messages: 10 });
+
+
+for await (const message of messages) {
+    console.log('message received:', JSON.parse(message.string()));
+    console.log('message subject:', message.subject);
+    console.log('message seqNr', message.seq);
+    console.log('==========================');
+    await message.ack();
+}
 
 await nc.drain();
