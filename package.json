@@ -16,6 +16,7 @@
     "@nats-io/kv": "^3.0.2",
     "@nats-io/nats-core": "^3.0.2",
     "@nats-io/nkeys": "^2.0.3",
+    "@nats-io/obj": "^3.0.2",
     "@nats-io/services": "^3.0.2",
     "@nats-io/transport-node": "^3.0.2",
     "ms": "^2.1.3",
