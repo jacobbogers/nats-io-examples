@@ -61,6 +61,7 @@ async function deleteConsumer(name: string): Promise<boolean> {
 await deleteConsumer('durable-namex');
 await deleteConsumer('durable-namey');
 await deleteConsumer('durable-namez');
+await deleteConsumer('-');
 
 const ci = await jsm.consumers.add('KV_order-book', {
     name: 'durable-name',
@@ -86,7 +87,7 @@ const c = await jsClient.consumers.get('KV_order-book', ci.name);
 console.log('isPullConsumer', c.isPullConsumer());
 console.log('isPushConsumer', c.isPushConsumer());
 
-const messages = await c.fetch({ max_messages: 10 });
+const messages = await c.fetch({ max_messages: 1 });
 
 
 for await (const message of messages) {
