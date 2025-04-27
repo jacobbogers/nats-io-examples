@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 
 
-import { AckPolicy, jetstreamManager, PubAck } from "@nats-io/jetstream";
-import { connect, credsAuthenticator, ConnectionOptions, nanos } from '@nats-io/transport-node';
-import { DeliverPolicy } from 'nats';
+import { AckPolicy, jetstreamManager, PubAck, DeliverPolicy } from "@nats-io/jetstream";
+import { connect, credsAuthenticator, ConnectionOptions } from '@nats-io/transport-node';
 import { ConsumerApiAction } from 'nats/lib/jetstream/jsapi_types';
+
 
 const endoderInstance = new TextEncoder();
 const encode: (string) => Uint8Array = endoderInstance.encode.bind(endoderInstance);
