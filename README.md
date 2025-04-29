@@ -43,3 +43,7 @@ publicKey: OAE4UPADZCTD7IHQ62POYOPOYXLAI6C3RVYATFNRKWNNWBAS4SXFLC4Z
 publicKey: OAE4UPADZCTD7IHQ62POYOPOYXLAI6C3RVYATFNRKWNNWBAS4SXFLC4Z
 ```
 
+
+Ligon with Google changed, federated 
+
+https://privacysandbox.google.com/cookies/fedcm
