@@ -1,4 +1,4 @@
-listen: node1:4222
+listen: 0.0.0.0:4222
 monitor_port: 8222
 
 server_name: n1
@@ -15,7 +15,8 @@ cluster {
   name: c1
   listen: node1:6222
   routes = [
-    nats-route://node2:6222
+    nats-route://node1:6222
+    nats-route://node2:7222
   ]
 }
 
@@ -31,7 +32,7 @@ resolver_preload {
 
 resolver {
    type: full
-   dir: c:/repos/nats-io-examples/n1-c1/lib/nats/resolver
+   dir: c:/repos/nats-io-examples/n1-c1/resolver
    allow_delete: true
    interval: "2m"
    limit: 1000

@@ -1,10 +1,10 @@
 server_name: n2
 
 # The address and port clients must connect to
-listen: node2:4222
+listen: 0.0.0.0:5222
 
 # HTTP requests can be made to this port for monitoring purpose
-monitor_port: 8222
+monitor_port: 9222
 
 # The JWT token of the operator running the server (operator02)
 operator: eyJ0eXAiOiJKV1QiLCJhbGciOiJlZDI1NTE5LW5rZXkifQ.eyJhdWQiOiJOQVRTIiwibmFtZSI6Im9wZXJhdG9yLTAzIiwic3ViIjoiT0FCTVZPQzZOQVVWVE9YSDM2SE9PNjJVSFczRllNRTM1VlUzQ1lVUzM3M1pSTERIVjRFRUpRMzMiLCJuYXRzIjp7InNpZ25pbmdfa2V5cyI6WyJPQUs1SlQyRUtUQkdQV0NKUkc0NUdFRUJCVkw0RExQU1BWVUlNNFhYSEMzVzVIRFJYSkZRUFNNTyIsIk9DVlpHUlJaV1hJWjY0TFUzNlBVSlQyVjRKQkFaVFJVMkRFVERSSzZTR1dDV0VRQlQ1QldHVVdNIiwiT0E3Q1lHRVlUNVlRM0NMUDQ3S1lMMkI0VENDQzdRVENDU05aRFJaR0YyVlkyWUhYNkdOWkZLNVIiXSwic3lzdGVtX2FjY291bnQiOiJBRDNST0xWNFEzWUhVWUJTT05XWTZMVkw1NEtDNkdWNU1VUTJaWUM2VkdGVzZKRzRNQVczSTZKSSIsInR5cGUiOiJvcGVyYXRvciIsInZlcnNpb24iOjJ9LCJpc3MiOiJPQUJNVk9DNk5BVVZUT1hIMzZIT082MlVIVzNGWU1FMzVWVTNDWVVTMzczWlJMREhWNEVFSlEzMyIsImlhdCI6MTc0NTA5NDQ1MywianRpIjoiL2JXRzFYczJSQmxzMWxUNjdNTzdFcmI3anhnN0lUZ0hHeUlEaHRkMnR3KzF4T1lnV1JNYkdkVnRyOTdib1c3V1pPUjY0TEY3VjZKTFF6VTRLcHdmaXc9PSJ9.39-Z3F2OyHJM3K0vlMxlQPx4Ve3VI5kGAyP-lbk6xlYft1ARESfR4iiXSnv-95Qu6CdWGwyGq039oNLMN27rDg
@@ -26,17 +26,17 @@ resolver {
 }
 
 jetstream {
-    store_dir: c:/repos/nats-io-examples/n2-c1
+    store_dir: c:/repos/nats-io-examples/n2-c1/resolver
     max_mem: -1
     max_file: -1
 }
 
 cluster {
   name: "c1"
-  listen: node2:6222
+  listen: node2:7222
   routes = [
     nats-route://node1:6222
-    nats-route://node2:6222
+    nats-route://node2:7222
   ]
 }
 
