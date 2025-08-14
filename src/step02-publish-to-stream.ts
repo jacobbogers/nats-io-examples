@@ -1,36 +1,37 @@
 import { readFileSync } from 'node:fs';
-
+import { encode } from './helpers';
+import config from './config';
 
 import { jetstreamManager, PubAck } from "@nats-io/jetstream";
 import { connect, credsAuthenticator, ConnectionOptions, headers } from '@nats-io/transport-node';
 
-const endoderInstance = new TextEncoder();
-const encode: (argo0: string) => Uint8Array = endoderInstance.encode.bind(endoderInstance);
+const { node1, kvStreamName: streamName } = config;
 
 const jsUserCreds = readFileSync('./jetstream-user.creds', { encoding: 'utf-8' })
 
 const options: ConnectionOptions = {
-    servers: "localhost:4222",
+    servers: node1,
     authenticator: credsAuthenticator(encode(jsUserCreds)),
     name: 'step-02'
 };
 
 const nc = await connect(options);
-console.log('jetstream user connected');
+console.log('jetstream user connected', nc.info);
 
+// set up a close handler, this promise is long lived
 nc.closed().then(() => console.log('connection closed'));
 
 const jsm = await jetstreamManager(nc);
-const streamName = 'KV_order-book';
 
 // get the existing stream
 const testStream = await jsm.streams.get(streamName);
 const testStreamInfo = await testStream.info()
-console.log('stream %s found, state:%o, info:%o', streamName, testStreamInfo.state, testStreamInfo.config);
+console.log('stream info: name=[%s], state:%o, config:%o', streamName, testStreamInfo.state, testStreamInfo.config);
 
 const msgHeaders = headers();
-console.log('headers.code', msgHeaders.code);
 msgHeaders.set('Nats-TTL', `${24 * 3600}`, 'canonical');
+
+
 
 if (testStreamInfo.state.messages > 0) {
     console.log('there area messages in this stream %s will not add more', testStreamInfo.state.messages);
@@ -51,6 +52,8 @@ for (let i = 0; i < nrMessages; i++) {
 }
 
 await Promise.all(ackPromises);
+
+console.log('headers', msgHeaders);
 
 const dt = Math.round((Date.now() - t0) / 10) / 100;
 

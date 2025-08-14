@@ -5,7 +5,9 @@
   "description": "These are standalone snippets of nats.io configurations",
   "main": "index.js",
   "scripts": {
-    "test:js": "tsx src/create-stream-and-publish.ts"
+    "drop-stream": "tsx src/drop-stream.ts",
+    "step1":"tsx src/step01-create-stream",
+    "step2": "tsx src/step02-publish-to-stream"
   },
   "keywords": [],
   "author": "",

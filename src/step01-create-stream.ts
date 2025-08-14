@@ -1,16 +1,19 @@
+// purge and delete stream  "KV_order-book"
+// create stream KV_order-book with subjects 
+
 import { readFileSync } from 'node:fs';
-
-
 import { jetstreamManager } from "@nats-io/jetstream";
 import { connect, credsAuthenticator, ConnectionOptions } from '@nats-io/transport-node';
 
-const endoderInstance = new TextEncoder();
-const encode: (string) => Uint8Array = endoderInstance.encode.bind(endoderInstance);
+import { encode } from './helpers';
+import config from './config';
+
+const { node1, kvStreamName: streamName } = config;
 
 const jsUserCreds = readFileSync('./jetstream-user.creds', { encoding: 'utf-8' })
 
 const options: ConnectionOptions = {
-    servers: "localhost:4222",
+    servers: node1,
     authenticator: credsAuthenticator(encode(jsUserCreds)),
     name: 'step-01',
 };
@@ -23,8 +26,6 @@ nc.closed().then(() => console.log('connection closed'));
 const jsm = await jetstreamManager(nc);
 const streamInfo = await jsm.streams.list();
 
-const streamName = 'KV_order-book';
-
 console.log('purging stream: %s', streamName);
 const purgeResponse = await jsm.streams.purge(streamName, { filter: 'nasdaq.>', seq: 1e9 });
 console.log('purge response: %o', purgeResponse);
@@ -34,7 +35,7 @@ console.log('deleteResponse response: %o', deleteResponse);
 
 const testStream = await jsm.streams.add({
     name: streamName,
-    description: 'jetstream order',
+    description: 'jetstream to capture limit-orders',
     storage: 'file',
     num_replicas: 1,
     metadata: {
@@ -48,4 +49,5 @@ for await (const info of streamInfo) {
     console.log('stream name: %s', info.config.name);
 }
 
+// process all in transit messages and close the connection 
 await nc.drain();
