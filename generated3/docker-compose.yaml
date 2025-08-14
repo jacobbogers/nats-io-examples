@@ -4,7 +4,6 @@ services:
     dns_search: c1.nats.internal
     image: nats:2.11.8-alpine3.22
     environment:
-      GATEWAY: c1
       NAME: n1.c1
       ADVERTISE: n1.c1.nats.internal:10000
     networks:
@@ -20,7 +19,6 @@ services:
     dns_search: c1.nats.internal
     image:  nats:2.11.8-alpine3.22
     environment:
-      GATEWAY: c1
       NAME: n2.c1
       ADVERTISE: n2.c1.nats.internal:10001
     networks:
@@ -36,7 +34,6 @@ services:
     dns_search: c1.nats.internal
     image:  nats:2.11.8-alpine3.22
     environment:
-      GATEWAY: c1
       NAME: n3.c1
       ADVERTISE: n3.c1.nats.internal:10002
     networks:
