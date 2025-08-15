@@ -5,7 +5,9 @@
   "description": "These are standalone snippets of nats.io configurations",
   "main": "index.js",
   "scripts": {
+    "system-account": "tsx src/one-shot-create-system-account",
     "drop-stream": "tsx src/drop-stream.ts",
+    "create-rp-account": "tsx src/create-jetstream-account-and-user.ts",
     "step1":"tsx src/step01-create-stream",
     "step2": "tsx src/step02-publish-to-stream"
   },

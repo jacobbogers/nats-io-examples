@@ -32,7 +32,6 @@ const signingKeysPairs = [
 
 
 const jwt = await encodeAccount('system_account', sysAccountKP, {
-    // this looks like no limits what-so-ever
     signing_keys: signingKeysPairs.map(skp => skp.getPublicKey()),
     type: 'account',
     limits: {

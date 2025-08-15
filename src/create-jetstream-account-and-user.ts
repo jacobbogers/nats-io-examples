@@ -7,7 +7,10 @@ import { fromSeed, createUser, createAccount } from "@nats-io/nkeys";
 import { encodeUser, encodeAccount, User } from "@nats-io/jwt";
 import { writeFileSync, readFileSync } from 'node:fs';
 
-import { connect, ConnectionOptions, credsAuthenticator, StringCodec, type NatsConnection } from 'nats';
+import { StringCodec } from 'nats';
+import { connect, credsAuthenticator, ConnectionOptions, type NatsConnection } from '@nats-io/transport-node';
+
+import { encode, decode } from './helpers';
 
 // NOTE: FORMATTING IS IMPORTANT (no indent) FOR "nats" CLI TOOL
 function returnCreds(jwt: string, seed: string) {
@@ -25,28 +28,18 @@ ${seed}
 `;
 }
 
-// function delay(ts: number) {
-//     return new Promise<void>(resolve => setTimeout(() => resolve(undefined), ts));
-// }
 
 async function runme() {
-    const endoderInstance = new TextEncoder();
-    const encode: (string) => Uint8Array = endoderInstance.encode.bind(endoderInstance);
-
-    const decoderInstance = new TextDecoder();
-    const decode: (Uint8Array) => string = decoderInstance.decode.bind(decoderInstance);
-
-
-    const operatorKP = fromSeed(encode('SOAHGERKP26RQMZ7OO7VZDAMBECBRLLZGORGJPGMD7RGCUYVNFEJZQ22SQ'));
     const operatorSK = fromSeed(encode('SOAEPJ5WJHD3F3RASWZZSGXQXLEZWSFGFAOBT6FP67ARJBPMJ3DCMLTBXI'));
-    const jetStreamAccountKP = createAccount();
+    const jetStreamAccountKP = fromSeed(encode('SAAHLOISF22OLEXLYRPYROV3FE6ZUOR7CXF2LEGM6FRVVJ5IB7HR5P264A'));
     const systemUserCreds = readFileSync('./sys-user.creds', { encoding: 'utf-8' })
-    const userPK = createUser();
+    const userKP = fromSeed(encode('SUAGKB4YXH6S4JTQ3JDP2BZ7RKEQ7GAMNDIYFW6LRPO6A73R56RPEP25K4'));
 
 
     // create non system account with jetstream enabled
 
-    const jetStreamJwt = await encodeAccount('normal-account-with-js', jetStreamAccountKP, {
+    const jetStreamJwt = await encodeAccount('relay-party', jetStreamAccountKP, {
+        description: 'storage for relay parties',
         type: 'account',
         limits: {
             subs: -1,
@@ -57,8 +50,6 @@ async function runme() {
             wildcards: true,
             conn: -1,
             leaf: -1,
-            //  no limits for jetstream
-            //  account can only consume advisory messages
             mem_storage: -1, // unlimited for jetstream  
             disk_storage: -1 // unlimited for jetstream
         }
@@ -75,13 +66,15 @@ async function runme() {
         "issuer_account": jetStreamAccountKP.getPublicKey()
     }
 
-    const userJwt = await encodeUser('casual-user', userPK, jetStreamAccountKP, config);
+    const userJwt = await encodeUser('rp-user', userKP, jetStreamAccountKP, config);
 
-    console.log('user seed', userPK.getPublicKey);
-    console.log('account seed', decode(jetStreamAccountKP.getSeed()));
+    console.log('user public  key  ', userKP.getPublicKey());
+    console.log('user seed         ', decode(userKP.getSeed()));
+    console.log('account public key', jetStreamAccountKP.getPublicKey());
+    console.log('account seed      ', decode(jetStreamAccountKP.getSeed()));
 
     const connectOptions: ConnectionOptions = {
-        servers: 'localhost:4222',
+        servers: 'node2:4222',
         authenticator: credsAuthenticator(encode(systemUserCreds)),
         name: 'jetstream-account',
         reconnect: true,
@@ -101,8 +94,8 @@ async function runme() {
 
         // FINALLY, lets use our new User JWT to subscribe to a topic of our choosing.
         // If we've done this correctly, this user will be authenticated and authorized
-        const userCreds = returnCreds(userJwt, decode(userPK.getSeed()));
-        const nc2 = await connect({ servers: "localhost:4222", authenticator: credsAuthenticator(encode(userCreds)) });
+        const userCreds = returnCreds(userJwt, decode(userKP.getSeed()));
+        const nc2 = await connect({ servers: "node1:4222", authenticator: credsAuthenticator(encode(userCreds)) });
         console.log('jetstream user connection success');
         writeFileSync('./jetstream-user.creds', userCreds);
         nc2.close();
