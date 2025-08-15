@@ -8,12 +8,12 @@ import { connect, credsAuthenticator, ConnectionOptions } from '@nats-io/transpo
 import { encode } from './helpers';
 import config from './config';
 
-const { node1, node2, kvStreamName: streamName } = config;
+const { node1, node2, node3, kvStreamName: streamName } = config;
 
 const jsUserCreds = readFileSync('./jetstream-user.creds', { encoding: 'utf-8' })
 
 const options: ConnectionOptions = {
-    servers: node1,
+    servers: node3,
     authenticator: credsAuthenticator(encode(jsUserCreds)),
     name: 'step-01',
 };
@@ -30,6 +30,16 @@ async function runme() {
     for await (const info of streamInfo) {
         console.log('stream name: %s', info.config.name);
     }
+
+    const updateResponse = await jsm.streams.update(streamName, {
+        num_replicas: 3
+    });
+
+    console.log('streamupdate response', updateResponse);
+
+    nc.drain();
+    return;
+
 
     console.log('purging stream: %s', streamName);
     try {
@@ -53,6 +63,10 @@ async function runme() {
             'reason': 'this is a test stream'
         },
         subjects: ['nasdaq.>', '$KV.order-book.>']
+    });
+
+    jsm.streams.update(streamName, {
+        num_replicas: 3
     });
 
     console.log('stream %s created, state:%o, info:%o', streamName, testStream.state, testStream.config);

@@ -1,9 +1,9 @@
-listen: 0.0.0.0:1222
-monitor_port: 4222
+listen: 0.0.0.0:3222
+monitor_port: 6222
 
 cluster {
   name: c1
-  listen: node1:7222
+  listen: node3:9222
   routes = [
     nats-route://node1:7222
     nats-route://node2:8222
@@ -11,23 +11,24 @@ cluster {
   ]
 }
 
-server_name: n1
+server_name: n3
 
 server_tags: c1
 
 resolver {
    type: full
-   dir: c:/repos/nats-io-examples/n1-c1/resolver
+   dir: c:/repos/nats-io-examples/n3-c1/resolver
    allow_delete: true
    interval: "2m"
    limit: 1000
 }
 
 jetstream {
-    store_dir: c:/repos/nats-io-examples/n1-c1
+    store_dir: c:/repos/nats-io-examples/n3-c1
     max_mem: -1
     max_file: -1
 }
+
 
 
 # The JWT token of the operator running the server (operator02)
